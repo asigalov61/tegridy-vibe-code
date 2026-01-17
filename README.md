@@ -16,7 +16,7 @@
 
 ### Additional, good but commercial, AI models for vibe-coding
 
-* [OpenAIhttps://chatgpt.com/]
+* [OpenAI](https://chatgpt.com/)
 * [Anthropic](https://claude.ai/)
 
 ***
