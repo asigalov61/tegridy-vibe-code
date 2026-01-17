@@ -9,8 +9,8 @@
 
 * [Microsoft](https://copilot.microsoft.com/)
 * [Qwen](https://chat.qwen.ai/)
-* [DeepSeek](https://chat.deepseek.com/)
 * [Z](https://chat.z.ai/)
+* [DeepSeek](https://chat.deepseek.com/)
 
 ***
 
