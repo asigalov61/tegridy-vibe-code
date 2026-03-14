@@ -43,8 +43,8 @@ Or download the two core files and place them in your project directory or Pytho
 Or clone the repository:
 
 ```bash
-git clone https://github.com/asigalov61/MIDIToolkit.git
-cd MIDIToolkit
+git clone https://github.com/asigalov61/tegridy-vibe-code
+cd tegridy-vibe-code/MIDIToolkit
 ```
 
 Import the toolkit:
