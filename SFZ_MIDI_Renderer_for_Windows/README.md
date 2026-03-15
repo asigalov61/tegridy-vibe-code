@@ -34,7 +34,7 @@ pip install mido
 
 ### Download and install [HQ SFZ instruments](https://sfzinstruments.github.io/)
 
-### Download and save [sfz_renderer_midi_duo.ps1](https://github.com/your_user_namelov61/tegridy-vibe-code/raw/refs/heads/main/SFZ_MIDI_Renderer_for_Windows/sfz_renderer_midi_duo.ps1)
+### Download and save [sfz_renderer_midi_duo.ps1](https://github.com/asigalov61/tegridy-vibe-code/raw/refs/heads/main/SFZ_MIDI_Renderer_for_Windows/sfz_renderer_midi_duo.ps1)
 
 ***
 
