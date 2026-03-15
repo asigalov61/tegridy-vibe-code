@@ -21,6 +21,21 @@ choco install python
 pip install mido
 ```
 
+### Download and unzip latest [sfizz](https://github.com/sfztools/sfizz) binaries for Windows
+
+```sh
+# Download from https://github.com/sfztools/sfizz/releases
+# I.e https://github.com/sfztools/sfizz/releases/download/1.2.3/sfizz-1.2.3-win64.zip
+
+# You will need only two files from release archive:
+* \bin\Release\sfizz.dll
+* \bin\Release\sfizz_render.exe
+```
+
+***
+
+## Download and install HQ SFZ instruments
+
 ***
 
 ### Project Los Angeles
