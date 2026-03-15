@@ -34,7 +34,7 @@ pip install mido
 
 ***
 
-## Download and install HQ SFZ instruments
+## Download and install [HQ SFZ instruments](https://sfzinstruments.github.io/)
 
 ***
 
