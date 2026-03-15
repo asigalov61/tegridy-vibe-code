@@ -5,7 +5,7 @@
 
 ## Installation
 
-### 1) Install Chocolatey(https://chocolatey.org/install)
+### 1) Install [Chocolatey](https://chocolatey.org/install)
 
 ### 2) Install latest Python via Chocolatey
 
