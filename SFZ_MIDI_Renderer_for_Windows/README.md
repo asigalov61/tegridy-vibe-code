@@ -32,9 +32,28 @@ pip install mido
 * \bin\Release\sfizz_render.exe
 ```
 
+### Download and install [HQ SFZ instruments](https://sfzinstruments.github.io/)
+
+### Download and save [sfz_renderer_midi_duo.ps1](https://github.com/your_user_namelov61/tegridy-vibe-code/raw/refs/heads/main/SFZ_MIDI_Renderer_for_Windows/sfz_renderer_midi_duo.ps1)
+
 ***
 
-## Download and install [HQ SFZ instruments](https://sfzinstruments.github.io/)
+## Basic usage
+
+```sh
+# Run the PowerShell sfz_renderer_midi_duo.ps1 script to render Violin-Piano MIDIs
+# From Windows PowerShell execute the following command
+
+# NOTE: Make sure that you change all example paths in the command below to your actual ones
+
+powershell -ExecutionPolicy Bypass `
+    -File "C:/Users/your_user_name/Desktop/SFZ/script/render_duo.ps1" `
+    -Midi "C:/Users/your_user_name/Desktop/SFZ/script/duo.mid" `
+    -PianoSFZ "C:/Users/your_user_name/Desktop/SFZ/SalamanderGrandPianoV3_48khz24bit/SalamanderGrandPianoV3.sfz" `
+    -ViolinSFZ "C:/Users/your_user_name/Desktop/SFZ/VPO/Virtual-Playing-Orchestra3/Strings/1st-violin-SEC-accent.sfz" `
+    -Out "C:/Users/your_user_name/Desktop/SFZ/script/duo_mix.wav" `
+    -SfizzRenderPath "C:/Users/your_user_name/Desktop/SFZ/script/sfizz_render.exe"
+```
 
 ***
 
