@@ -21,7 +21,7 @@ choco install python
 pip install mido
 ```
 
-### Download and unzip latest [sfizz](https://github.com/sfztools/sfizz) binaries for Windows
+### 4) Download and unzip latest [sfizz](https://github.com/sfztools/sfizz) binaries for Windows
 
 ```sh
 # Download from https://github.com/sfztools/sfizz/releases
@@ -32,9 +32,9 @@ pip install mido
 * \bin\Release\sfizz_render.exe
 ```
 
-### Download and install [HQ SFZ instruments](https://sfzinstruments.github.io/)
+### 5) Download and unzip [HQ SFZ instruments](https://sfzinstruments.github.io/)
 
-### Download and save [sfz_renderer_midi_duo.ps1](https://github.com/asigalov61/tegridy-vibe-code/raw/refs/heads/main/SFZ_MIDI_Renderer_for_Windows/sfz_renderer_midi_duo.ps1)
+### 6) Download and save [sfz_renderer_midi_duo.ps1](https://github.com/asigalov61/tegridy-vibe-code/raw/refs/heads/main/SFZ_MIDI_Renderer_for_Windows/sfz_renderer_midi_duo.ps1)
 
 ***
 
