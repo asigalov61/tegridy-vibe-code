@@ -47,7 +47,7 @@ pip install mido
 # NOTE: Make sure that you change all example paths in the command below to your actual ones
 
 powershell -ExecutionPolicy Bypass `
-    -File "C:/Users/your_user_name/Desktop/SFZ/script/render_duo.ps1" `
+    -File "C:/Users/your_user_name/Desktop/SFZ/script/sfz_renderer_midi_duo.ps1" `
     -Midi "C:/Users/your_user_name/Desktop/SFZ/script/duo.mid" `
     -PianoSFZ "C:/Users/your_user_name/Desktop/SFZ/SalamanderGrandPianoV3_48khz24bit/SalamanderGrandPianoV3.sfz" `
     -ViolinSFZ "C:/Users/your_user_name/Desktop/SFZ/VPO/Virtual-Playing-Orchestra3/Strings/1st-violin-SEC-accent.sfz" `
