@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HF User Stats — HuggingFace User Statistics</title>
+    <meta name="description" content="View detailed statistics for any HuggingFace user — models, datasets, spaces, lifetime downloads, and likes.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+        :root {
+            --bg: #ffffff;
+            --text: #1a1a2e;
+            --text-secondary: #64748b;
+            --header-bg: #f8fafc;
+            --border: #e2e8f0;
+            --accent: #ff9d00;
+            --accent-hover: #e68a00;
+            --accent-light: rgba(255, 157, 0, 0.08);
+            --accent-border: rgba(255, 157, 0, 0.25);
+            --panel-bg: #ffffff;
+            --line-num: #cbd5e1;
+            --tree-line: #94a3b8;
+            --btn-bg: #f1f5f9;
+            --btn-border: #e2e8f0;
+            --btn-hover: #e2e8f0;
+            --shadow: rgba(0, 0, 0, 0.06);
+            --shadow-lg: rgba(0, 0, 0, 0.1);
+            --model-color: #f59e0b;
+            --dataset-color: #10b981;
+            --space-color: #6366f1;
+            --monthly-color: #8b5cf6;
+            --tag-model: rgba(245, 158, 11, 0.1);
+            --tag-dataset: rgba(16, 185, 129, 0.1);
+            --tag-space: rgba(99, 102, 241, 0.1);
+            --mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            --radius: 10px;
+            --radius-sm: 6px;
+        }
+        [data-theme="dark"] {
+            --bg: #0f172a;
+            --text: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --header-bg: #1e293b;
+            --border: #334155;
+            --accent: #fbbf24;
+            --accent-hover: #f59e0b;
+            --accent-light: rgba(251, 191, 36, 0.08);
+            --accent-border: rgba(251, 191, 36, 0.2);
+            --panel-bg: #1e293b;
+            --line-num: #475569;
+            --tree-line: #475569;
+            --btn-bg: #1e293b;
+            --btn-border: #334155;
+            --btn-hover: #334155;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --shadow-lg: rgba(0, 0, 0, 0.5);
+            --tag-model: rgba(251, 191, 36, 0.1);
+            --tag-dataset: rgba(16, 185, 129, 0.1);
+            --tag-space: rgba(99, 102, 241, 0.12);
+            --monthly-color: #a78bfa;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            transition: background 0.3s, color 0.3s;
+            -webkit-font-smoothing: antialiased;
+        }
+        button, input { font-family: inherit; }
+        a { text-decoration: none; color: inherit; }
+        .app-container {
+            max-width: 1060px;
+            margin: 0 auto;
+            padding: 24px 20px 40px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-top: 8px;
+        }
+        .brand a {
+            display: flex; align-items: center; gap: 12px;
+            font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em;
+        }
+        .brand-icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, #ff9d00 0%, #ffb340 100%);
+            border-radius: var(--radius);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.1rem;
+            box-shadow: 0 2px 8px rgba(255, 157, 0, 0.3);
+        }
+        .header-actions { display: flex; gap: 12px; align-items: center; }
+        .icon-btn {
+            background: var(--btn-bg); border: 1px solid var(--btn-border);
+            font-size: 1.1rem; color: var(--text);
+            width: 38px; height: 38px; cursor: pointer;
+            border-radius: var(--radius); transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .icon-btn:hover { background: var(--btn-hover); border-color: var(--accent); }
+        .text-btn {
+            background: var(--btn-bg); border: 1px solid var(--btn-border);
+            font-size: 0.82rem; color: var(--text); cursor: pointer;
+            font-weight: 600; display: flex; align-items: center; gap: 6px;
+            padding: 8px 14px; border-radius: var(--radius); transition: all 0.2s;
+        }
+        .text-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .sun-icon { display: none !important; }
+        [data-theme="dark"] .sun-icon { display: inline-block !important; color: #fbbf24; }
+        [data-theme="dark"] .moon-icon { display: none !important; }
+        [data-theme="light"] .moon-icon { display: inline-block !important; color: #64748b; }
+        .token-panel {
+            background: var(--header-bg); border: 1px solid var(--border);
+            padding: 16px; border-radius: var(--radius);
+            margin-bottom: 20px; animation: slideDown 0.25s ease-out;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .token-inner { display: flex; gap: 10px; align-items: center; }
+        .token-inner i { color: var(--accent); font-size: 0.9rem; }
+        .token-inner input {
+            background: var(--bg); border: 1px solid var(--border);
+            padding: 9px 14px; border-radius: var(--radius-sm);
+            flex: 1; color: var(--text);
+            font-family: var(--mono); font-size: 0.82rem;
+        }
+        .token-inner input:focus {
+            outline: none; border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-border);
+        }
+        .token-inner button {
+            background: var(--accent); color: white; border: none;
+            padding: 9px 18px; border-radius: var(--radius-sm);
+            cursor: pointer; font-weight: 600; font-size: 0.82rem;
+            transition: background 0.2s;
+        }
+        .token-inner button:hover { background: var(--accent-hover); }
+        .token-warning {
+            font-size: 0.75rem; color: var(--text-secondary);
+            margin: 10px 0 0 0; display: flex; align-items: center; gap: 6px;
+        }
+        .token-warning i { color: #f59e0b; font-size: 0.75rem; }
+        .search-section {
+            display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;
+        }
+        .input-group {
+            background: var(--header-bg); border: 1px solid var(--border);
+            border-radius: var(--radius); display: flex; align-items: center;
+            padding: 0 14px; height: 44px; flex: 1;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-group:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-border);
+        }
+        .prefix {
+            color: var(--text-secondary); font-size: 0.8rem;
+            margin-right: 4px; white-space: nowrap;
+            font-family: var(--mono); font-weight: 500;
+        }
+        input {
+            background: transparent; border: none; color: var(--text);
+            width: 100%; outline: none; font-size: 0.88rem;
+            font-family: var(--mono); font-weight: 500;
+        }
+        .primary-btn {
+            background: var(--accent); color: white; border: none;
+            padding: 0 28px; border-radius: var(--radius);
+            font-weight: 700; cursor: pointer; height: 44px;
+            display: flex; align-items: center; gap: 10px;
+            font-size: 0.85rem; transition: all 0.2s;
+            box-shadow: 0 2px 6px rgba(255, 157, 0, 0.2);
+            white-space: nowrap;
+        }
+        .primary-btn:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 4px 12px rgba(255, 157, 0, 0.3);
+            transform: translateY(-1px);
+        }
+        .primary-btn:disabled { opacity: 0.6; cursor: wait; transform: none; }
+        #statusMsg {
+            padding: 12px 16px; margin-bottom: 16px;
+            font-size: 0.85rem; text-align: center;
+            font-weight: 500; border-radius: var(--radius); display: none;
+        }
+        .error { color: #ef4444; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.15); }
+        .loading { color: var(--accent); background: var(--accent-light); border: 1px solid var(--accent-border); }
+        .empty-state { text-align: center; }
+        .empty-state h3 { font-weight: 600; margin-top: 16px; letter-spacing: -0.02em; }
+        .empty-state p { color: var(--text-secondary); margin-bottom: 24px; font-size: 0.92rem; }
+        .homepage-section { margin-bottom: 36px; }
+        .homepage-section h3 {
+            font-size: 0.85rem; color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing: 1.5px;
+            font-weight: 600; margin-bottom: 16px;
+        }
+        .tag-cloud {
+            display: flex; justify-content: center; gap: 10px;
+            flex-wrap: wrap; max-width: 850px; margin: 0 auto;
+        }
+        .user-tag {
+            background: var(--btn-bg); border: 1px solid var(--border);
+            color: var(--text); padding: 8px 18px; border-radius: 24px;
+            cursor: pointer; font-size: 0.82rem; font-family: var(--mono);
+            font-weight: 500; transition: all 0.2s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .user-tag:hover {
+            border-color: var(--accent); transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+        .user-tag i { color: var(--accent); }
+        .profile-card {
+            background: var(--header-bg); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 24px;
+            margin-bottom: 20px; animation: slideDown 0.3s ease-out;
+        }
+        .profile-top {
+            display: flex; align-items: center; gap: 20px;
+        }
+        .profile-avatar {
+            width: 72px; height: 72px; border-radius: 50%;
+            border: 3px solid var(--accent);
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; flex-shrink: 0;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+        }
+        .profile-avatar img {
+            width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+        }
+        .profile-avatar .avatar-letter {
+            font-size: 1.8rem; font-weight: 700; color: white;
+        }
+        .profile-info { flex: 1; }
+        .profile-name {
+            font-size: 1.3rem; font-weight: 700;
+            letter-spacing: -0.02em; margin-bottom: 4px;
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        }
+        .profile-name a { color: var(--accent); }
+        .profile-name a:hover { text-decoration: underline; }
+        .profile-fullname {
+            font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 4px;
+        }
+        .profile-overview {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 12px; margin-top: 20px; padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+        .overview-card {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 16px;
+            text-align: center; transition: all 0.2s; cursor: pointer;
+        }
+        .overview-card:hover {
+            border-color: var(--accent); transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+        .overview-card.active-card {
+            border-color: var(--accent); background: var(--accent-light);
+        }
+        .overview-num {
+            font-size: 1.6rem; font-weight: 700;
+            font-family: var(--mono); letter-spacing: -0.02em;
+        }
+        .overview-num.model-num { color: var(--model-color); }
+        .overview-num.dataset-num { color: var(--dataset-color); }
+        .overview-num.space-num { color: var(--space-color); }
+        .overview-label {
+            font-size: 0.78rem; color: var(--text-secondary);
+            font-weight: 600; text-transform: uppercase;
+            letter-spacing: 1px; margin-top: 4px;
+        }
+        .tab-bar {
+            display: flex; border: 1px solid var(--border);
+            border-radius: var(--radius); overflow: hidden; margin-bottom: 16px;
+        }
+        .tab-btn {
+            flex: 1; background: var(--btn-bg); border: none;
+            border-right: 1px solid var(--border); padding: 12px 16px;
+            cursor: pointer; font-size: 0.85rem; font-weight: 600;
+            color: var(--text-secondary);
+            display: flex; align-items: center; justify-content: center;
+            gap: 8px; transition: all 0.2s;
+        }
+        .tab-btn:last-child { border-right: none; }
+        .tab-btn:hover { background: var(--btn-hover); color: var(--text); }
+        .tab-btn.active-model { background: var(--tag-model); color: var(--model-color); }
+        .tab-btn.active-dataset { background: var(--tag-dataset); color: var(--dataset-color); }
+        .tab-btn.active-space { background: var(--tag-space); color: var(--space-color); }
+        .tab-count {
+            background: var(--border); padding: 2px 8px; border-radius: 10px;
+            font-size: 0.72rem; font-weight: 700; font-family: var(--mono);
+        }
+        .tab-btn.active-model .tab-count { background: rgba(245, 158, 11, 0.2); }
+        .tab-btn.active-dataset .tab-count { background: rgba(16, 185, 129, 0.2); }
+        .tab-btn.active-space .tab-count { background: rgba(99, 102, 241, 0.2); }
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px; margin-bottom: 16px;
+        }
+        .stat-card {
+            background: var(--header-bg); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 16px 18px;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .stat-icon {
+            width: 42px; height: 42px; border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; flex-shrink: 0;
+        }
+        .stat-icon.dl-icon { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+        .stat-icon.monthly-icon { background: rgba(139, 92, 246, 0.1); color: var(--monthly-color); }
+        .stat-icon.like-icon { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .stat-icon.count-icon { background: var(--accent-light); color: var(--accent); }
+        .stat-value {
+            font-size: 1.25rem; font-weight: 700;
+            font-family: var(--mono); letter-spacing: -0.02em;
+        }
+        .stat-label {
+            font-size: 0.7rem; color: var(--text-secondary);
+            font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .filter-bar {
+            display: flex; gap: 8px; margin-bottom: 12px;
+            flex-wrap: wrap; align-items: center;
+        }
+        .filter-label {
+            font-size: 0.78rem; color: var(--text-secondary);
+            font-weight: 600; margin-right: 4px;
+        }
+        .filter-pill {
+            background: var(--btn-bg); border: 1px solid var(--btn-border);
+            color: var(--text-secondary); padding: 6px 14px;
+            border-radius: 20px; cursor: pointer; font-size: 0.78rem;
+            font-weight: 600; transition: all 0.2s; white-space: nowrap;
+        }
+        .filter-pill:hover { border-color: var(--accent); color: var(--text); }
+        .filter-pill.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .filter-search {
+            margin-left: auto; background: var(--header-bg);
+            border: 1px solid var(--border); border-radius: 20px;
+            padding: 6px 14px; display: flex; align-items: center; gap: 6px;
+            transition: border-color 0.2s;
+        }
+        .filter-search:focus-within { border-color: var(--accent); }
+        .filter-search i { color: var(--text-secondary); font-size: 0.78rem; }
+        .filter-search input { font-size: 0.78rem; width: 160px; font-family: var(--mono); }
+        .tree-wrapper {
+            border: 1px solid var(--border); border-radius: var(--radius);
+            display: flex; flex-direction: column; background: var(--panel-bg);
+            box-shadow: 0 4px 16px var(--shadow); overflow: hidden;
+        }
+        .tree-header {
+            background: var(--header-bg); padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between;
+            align-items: center; flex-wrap: wrap; gap: 8px;
+        }
+        .tree-title {
+            font-size: 0.82rem; font-weight: 600;
+            color: var(--text-secondary); font-family: var(--mono);
+        }
+        .tool-btn {
+            background: var(--btn-bg); border: 1px solid var(--btn-border);
+            color: var(--text); padding: 7px 14px; border-radius: var(--radius-sm);
+            font-size: 0.8rem; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 7px; transition: all 0.2s;
+        }
+        .tool-btn:hover { background: var(--btn-hover); border-color: var(--tree-line); }
+        .action-btn { color: #fff; background: var(--accent); border-color: var(--accent); }
+        .action-btn:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+        .terminal-window {
+            background: var(--panel-bg); display: flex; overflow: auto;
+            font-family: var(--mono); font-size: 13px;
+            line-height: 1.7; max-height: 70vh;
+        }
+        .line-col {
+            padding: 16px 12px; text-align: right; color: var(--line-num);
+            border-right: 1px solid var(--border); min-width: 48px;
+            user-select: none; font-size: 0.75rem; font-weight: 500;
+        }
+        .line-col div {
+            height: 32px; display: flex; align-items: center; justify-content: flex-end;
+        }
+        .code-col { padding: 16px; flex: 1; white-space: pre; min-width: 0; }
+        .tree-line {
+            display: flex; align-items: center; height: 32px;
+            border-radius: 4px; padding: 0 6px; gap: 2px;
+        }
+        .tree-line:hover { background: var(--accent-light); }
+        .t-prefix {
+            color: var(--tree-line); white-space: pre;
+            margin-right: 4px; flex-shrink: 0;
+        }
+        .t-icon {
+            width: 22px; text-align: center;
+            display: inline-flex; align-items: center; justify-content: center;
+            margin-right: 8px; font-size: 0.85rem; flex-shrink: 0;
+        }
+        .t-name {
+            color: var(--text); font-weight: 600;
+            white-space: nowrap; overflow: hidden;
+            text-overflow: ellipsis; min-width: 0;
+        }
+        .t-name a { color: var(--text); transition: color 0.15s; }
+        .t-name a:hover { color: var(--accent); }
+        .t-meta {
+            margin-left: auto; display: flex; align-items: center;
+            gap: 12px; flex-shrink: 0; padding-left: 12px;
+        }
+        .t-stat {
+            font-size: 0.7rem; color: var(--text-secondary);
+            display: flex; align-items: center; gap: 4px;
+            font-weight: 500; white-space: nowrap;
+        }
+        .t-stat i { font-size: 0.65rem; }
+        .t-stat.dl-stat i { color: #3b82f6; }
+        .t-stat.monthly-stat i { color: var(--monthly-color); }
+        .t-stat.like-stat i { color: #ef4444; }
+        .t-stat.date-stat i { color: var(--text-secondary); }
+        .t-copy {
+            opacity: 0; background: none; border: none;
+            color: var(--text-secondary); cursor: pointer;
+            padding: 3px; font-size: 0.78rem; transition: all 0.2s;
+            display: flex; align-items: center; flex-shrink: 0;
+        }
+        .tree-line:hover .t-copy { opacity: 1; }
+        .t-copy:hover { color: var(--accent); transform: scale(1.15); }
+        .no-data {
+            padding: 48px 20px; text-align: center;
+            color: var(--text-secondary); font-size: 0.9rem;
+        }
+        .no-data i { font-size: 2rem; margin-bottom: 12px; display: block; opacity: 0.4; }
+        .footer {
+            padding: 40px 20px; text-align: center;
+            font-family: var(--mono); font-weight: 500;
+            font-size: 0.75rem; color: var(--text-secondary); margin-top: auto;
+        }
+        .footer a { color: var(--accent); font-weight: 600; }
+        .footer a:hover { text-decoration: underline; }
+        .spinner {
+            display: inline-block; width: 14px; height: 14px;
+            border: 2px solid var(--accent-border);
+            border-top-color: var(--accent); border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px; vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @media (max-width: 640px) {
+            .search-section { flex-direction: column; }
+            .primary-btn { width: 100%; justify-content: center; }
+            .profile-top { flex-direction: column; text-align: center; }
+            .profile-name { justify-content: center; }
+            .profile-overview { grid-template-columns: repeat(3, 1fr); }
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .filter-bar { flex-direction: column; align-items: stretch; }
+            .filter-search { margin-left: 0; }
+            .filter-search input { width: 100%; }
+            .tab-btn { padding: 10px 8px; font-size: 0.78rem; }
+            .t-meta { gap: 6px; }
+            .tree-header { flex-direction: column; align-items: stretch; }
+            .overview-card { padding: 12px 8px; }
+            .overview-num { font-size: 1.2rem; }
+            .stat-card { padding: 12px 14px; gap: 10px; }
+            .stat-value { font-size: 1.1rem; }
+            .stat-icon { width: 36px; height: 36px; font-size: 0.9rem; }
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--tree-line); }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::selection { background: var(--accent); color: white; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <div class="brand">
+                <a href="#">
+                    <div class="brand-icon"><i class="fas fa-chart-bar"></i></div>
+                    <span>hf-user-stats🤗</span>
+                </a>
+            </div>
+            <div class="header-actions">
+                <button id="privateRepoBtn" class="text-btn" title="Access Private Repos">
+                    <i class="fas fa-lock"></i> Token
+                </button>
+                <button id="themeToggle" class="icon-btn" aria-label="Toggle Theme">
+                    <i class="fas fa-sun sun-icon"></i>
+                    <i class="fas fa-moon moon-icon"></i>
+                </button>
+            </div>
+        </header>
+
+        <div id="tokenSection" class="token-panel hidden">
+            <div class="token-inner">
+                <i class="fas fa-key"></i>
+                <input type="password" id="hfToken" placeholder="Paste HuggingFace Access Token (hf_...)">
+                <button id="saveTokenBtn">Save</button>
+                <button id="clearTokenBtn" class="hidden">Clear</button>
+            </div>
+            <p class="token-warning">
+                <i class="fas fa-exclamation-triangle"></i> Token is saved to <b>LocalStorage</b>. Required for private repos & accurate lifetime stats.
+            </p>
+        </div>
+
+        <div class="search-section">
+            <div class="input-group" style="flex:2;">
+                <span class="prefix"><i class="fas fa-user" style="margin-right:6px;color:var(--accent);"></i> hf.co/</span>
+                <input type="text" id="usernameInput" placeholder="username (e.g. prithivMLmods)" autocomplete="off">
+            </div>
+            <button id="fetchBtn" class="primary-btn">
+                <i class="fas fa-search"></i> Fetch Stats
+            </button>
+        </div>
+
+        <div id="statusMsg"></div>
+
+        <div id="emptyState" class="empty-state">
+            <div class="homepage-section">
+                <h3 style="font-size:1.3rem;text-transform:none;letter-spacing:-0.02em;color:var(--text);">
+                    Hugging-face User Statistics
+                </h3>
+                <p>View models, datasets, spaces, lifetime downloads, monthly downloads, and likes for any Hugging-face user.</p>
+            </div>
+            <div class="homepage-section">
+                <h3>Featured Users</h3>
+                <div id="featuredUsers" class="tag-cloud"></div>
+            </div>
+        </div>
+
+        <div id="resultsSection" class="hidden">
+            <div id="profileCard" class="profile-card">
+                <div class="profile-top">
+                    <div class="profile-avatar" id="profileAvatar">
+                        <span class="avatar-letter" id="avatarLetter"></span>
+                    </div>
+                    <div class="profile-info">
+                        <div class="profile-name">
+                            <a id="profileLink" href="#" target="_blank" rel="noopener">
+                                <span id="profileUsername"></span>
+                            </a>
+                        </div>
+                        <div class="profile-fullname" id="profileFullname"></div>
+                    </div>
+                </div>
+                <div class="profile-overview">
+                    <div class="overview-card" id="overviewModels" data-tab="models">
+                        <div class="overview-num model-num" id="totalModelsNum">0</div>
+                        <div class="overview-label"><i class="fas fa-cube"></i> Models</div>
+                    </div>
+                    <div class="overview-card" id="overviewDatasets" data-tab="datasets">
+                        <div class="overview-num dataset-num" id="totalDatasetsNum">0</div>
+                        <div class="overview-label"><i class="fas fa-database"></i> Datasets</div>
+                    </div>
+                    <div class="overview-card" id="overviewSpaces" data-tab="spaces">
+                        <div class="overview-num space-num" id="totalSpacesNum">0</div>
+                        <div class="overview-label"><i class="fas fa-rocket"></i> Spaces</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-bar" id="tabBar">
+                <button class="tab-btn active-model" data-tab="models">
+                    <i class="fas fa-cube"></i> Models <span class="tab-count" id="tabModelCount">0</span>
+                </button>
+                <button class="tab-btn" data-tab="datasets">
+                    <i class="fas fa-database"></i> Datasets <span class="tab-count" id="tabDatasetCount">0</span>
+                </button>
+                <button class="tab-btn" data-tab="spaces">
+                    <i class="fas fa-rocket"></i> Spaces <span class="tab-count" id="tabSpaceCount">0</span>
+                </button>
+            </div>
+
+            <div class="stats-row" id="statsRow"></div>
+            <div class="filter-bar" id="filterBar"></div>
+
+            <div class="tree-wrapper" id="treeWrapper">
+                <div class="tree-header">
+                    <span class="tree-title" id="treeTitle"></span>
+                    <div style="display:flex;gap:8px;">
+                        <button class="tool-btn action-btn" id="copyTreeBtn">
+                            <i class="far fa-copy"></i> Copy Tree
+                        </button>
+                    </div>
+                </div>
+                <div class="terminal-window">
+                    <div class="line-col" id="lineNumbers"></div>
+                    <div class="code-col" id="treeContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Built by <a href="https://hf.co/prithivMLmods" target="_blank" rel="noopener">prithivMLmods</a>
+        </div>
+    </div>
+
+    <script>
+    const HF_API = 'https://huggingface.co/api';
+    let state = {
+        username: '',
+        profile: null,
+        models: [],
+        datasets: [],
+        spaces: [],
+        activeTab: 'models',
+        activeFilter: 'downloads-alltime',
+        filterText: '',
+    };
+    const $ = id => document.getElementById(id);
+    const els = {
+        usernameInput: $('usernameInput'),
+        fetchBtn: $('fetchBtn'),
+        statusMsg: $('statusMsg'),
+        emptyState: $('emptyState'),
+        resultsSection: $('resultsSection'),
+        profileAvatar: $('profileAvatar'),
+        avatarLetter: $('avatarLetter'),
+        profileLink: $('profileLink'),
+        profileUsername: $('profileUsername'),
+        profileFullname: $('profileFullname'),
+        totalModelsNum: $('totalModelsNum'),
+        totalDatasetsNum: $('totalDatasetsNum'),
+        totalSpacesNum: $('totalSpacesNum'),
+        tabModelCount: $('tabModelCount'),
+        tabDatasetCount: $('tabDatasetCount'),
+        tabSpaceCount: $('tabSpaceCount'),
+        tabBar: $('tabBar'),
+        statsRow: $('statsRow'),
+        filterBar: $('filterBar'),
+        treeTitle: $('treeTitle'),
+        lineNumbers: $('lineNumbers'),
+        treeContent: $('treeContent'),
+        copyTreeBtn: $('copyTreeBtn'),
+        tokenSection: $('tokenSection'),
+        hfToken: $('hfToken'),
+        saveTokenBtn: $('saveTokenBtn'),
+        clearTokenBtn: $('clearTokenBtn'),
+        privateRepoBtn: $('privateRepoBtn'),
+        overviewModels: $('overviewModels'),
+        overviewDatasets: $('overviewDatasets'),
+        overviewSpaces: $('overviewSpaces'),
+    };
+    const FEATURED_USERS = [
+        'prithivMLmods', 'TheBloke', 'merve', 'MaziyarPanahi', 'multimodalart',
+        'thomwolf', 'julien-c', 'lysandre', 'osanseviero',
+        'pcuenq', 'clem', 'lhoestq', 'sayakpaul', 'mlabonne', 'mradermacher', 
+    ];
+    function getHeaders() {
+        const t = localStorage.getItem('hf_token');
+        const h = { Accept: 'application/json' };
+        if (t) h['Authorization'] = `Bearer ${t}`;
+        return h;
+    }
+    function formatNum(n) {
+        if (n == null) return '—';
+        if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+        if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+        if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+        return n.toLocaleString();
+    }
+    function formatNumFull(n) {
+        if (n == null) return '—';
+        return n.toLocaleString();
+    }
+    function relativeTime(d) {
+        if (!d) return '';
+        const diff = Date.now() - new Date(d).getTime();
+        const m = Math.floor(diff / 60000);
+        if (m < 1) return 'just now';
+        if (m < 60) return m + 'm ago';
+        const h = Math.floor(m / 60);
+        if (h < 24) return h + 'h ago';
+        const dy = Math.floor(h / 24);
+        if (dy < 7) return dy + 'd ago';
+        const w = Math.floor(dy / 7);
+        if (w < 5) return w + 'w ago';
+        const mo = Math.floor(dy / 30);
+        if (mo < 12) return mo + 'mo ago';
+        return Math.floor(dy / 365) + 'y ago';
+    }
+    function escapeHtml(s) {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+    function showMsg(text, type) {
+        els.statusMsg.style.display = text ? 'block' : 'none';
+        els.statusMsg.innerHTML = text;
+        els.statusMsg.className = type || '';
+    }
+    /* downloads field = last 30 days (shown on model/dataset page as "Downloads last month") */
+    function getMonthlyDownloads(item) {
+        return item.downloads || 0;
+    }
+    /* downloadsAllTime = lifetime total (shown on settings page as "Total downloads (all time)") */
+    function getLifetimeDownloads(item) {
+        if (item.downloadsAllTime != null && item.downloadsAllTime > 0) return item.downloadsAllTime;
+        if (item.downloads_all_time != null && item.downloads_all_time > 0) return item.downloads_all_time;
+        return item.downloads || 0;
+    }
+    function getItemLikes(item) {
+        if (item.likes != null && typeof item.likes === 'number') return item.likes;
+        return 0;
+    }
+    function initTheme() {
+        const s = localStorage.getItem('hfstat_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', s);
+        $('themeToggle').addEventListener('click', () => {
+            const n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', n);
+            localStorage.setItem('hfstat_theme', n);
+        });
+    }
+    function checkToken() {
+        const t = localStorage.getItem('hf_token');
+        if (t) {
+            els.hfToken.value = t;
+            els.privateRepoBtn.innerHTML = '<i class="fas fa-lock-open"></i> Active';
+            els.privateRepoBtn.style.color = 'var(--accent)';
+            els.saveTokenBtn.classList.add('hidden');
+            els.clearTokenBtn.classList.remove('hidden');
+        } else {
+            els.privateRepoBtn.innerHTML = '<i class="fas fa-lock"></i> Token';
+            els.privateRepoBtn.style.color = '';
+            els.saveTokenBtn.classList.remove('hidden');
+            els.clearTokenBtn.classList.add('hidden');
+        }
+    }
+    async function fetchAllPages(url) {
+        let all = [], nextUrl = url;
+        const headers = getHeaders();
+        while (nextUrl) {
+            const resp = await fetch(nextUrl, { headers });
+            if (!resp.ok) {
+                if (all.length > 0) break;
+                throw new Error(`HTTP ${resp.status}`);
+            }
+            const items = await resp.json();
+            if (!Array.isArray(items) || items.length === 0) break;
+            all = all.concat(items);
+            nextUrl = null;
+            const link = resp.headers.get('Link');
+            if (link) {
+                const m = link.match(/<([^>]+)>;\s*rel="next"/);
+                if (m) nextUrl = m[1];
+            }
+        }
+        return all;
+    }
+    async function fetchProfile(username) {
+        const headers = getHeaders();
+        try {
+            const resp = await fetch(`${HF_API}/users/${encodeURIComponent(username)}/overview`, { headers });
+            if (resp.ok) return await resp.json();
+        } catch (e) {}
+        return null;
+    }
+    async function fetchItemDetail(itemId, type) {
+        const headers = getHeaders();
+        try {
+            let url;
+            if (type === 'models') {
+                url = `${HF_API}/models/${encodeURIComponent(itemId)}`;
+            } else {
+                url = `${HF_API}/datasets/${encodeURIComponent(itemId)}`;
+            }
+            const resp = await fetch(url, { headers });
+            if (resp.ok) {
+                return await resp.json();
+            }
+        } catch (e) {}
+        return null;
+    }
+    async function fetchUserStats() {
+        const username = els.usernameInput.value.trim().replace(/^@/, '').replace(/\/$/, '');
+        if (!username) return showMsg("Please enter a username.", "error");
+        state.username = username;
+        state.filterText = '';
+        els.emptyState.classList.add('hidden');
+        els.resultsSection.classList.add('hidden');
+        els.fetchBtn.disabled = true;
+        showMsg(`<span class="spinner"></span> Fetching stats for <b>${escapeHtml(username)}</b>…`, 'loading');
+        try {
+            const uEnc = encodeURIComponent(username);
+            const expandParams = 'expand[]=downloadsAllTime&expand[]=downloads&expand[]=likes&expand[]=lastModified&expand[]=createdAt';
+            const [profileData, models, datasets, spaces] = await Promise.allSettled([
+                fetchProfile(username),
+                fetchAllPages(`${HF_API}/models?author=${uEnc}&limit=1000&full=true&${expandParams}`),
+                fetchAllPages(`${HF_API}/datasets?author=${uEnc}&limit=1000&full=true&${expandParams}`),
+                fetchAllPages(`${HF_API}/spaces?author=${uEnc}&limit=1000&full=true&expand[]=likes`),
+            ]);
+            state.profile = profileData.status === 'fulfilled' ? profileData.value : null;
+            state.models = models.status === 'fulfilled' ? models.value : [];
+            state.datasets = datasets.status === 'fulfilled' ? datasets.value : [];
+            state.spaces = spaces.status === 'fulfilled' ? spaces.value : [];
+            if (state.models.length > 0) {
+                const sample = state.models[0];
+                console.log('[HF-Stats] Sample model:', {
+                    id: sample.id,
+                    likes: sample.likes,
+                    downloads: sample.downloads,
+                    downloadsAllTime: sample.downloadsAllTime,
+                    keys: Object.keys(sample)
+                });
+            }
+            if (state.datasets.length > 0) {
+                const sample = state.datasets[0];
+                console.log('[HF-Stats] Sample dataset:', {
+                    id: sample.id,
+                    likes: sample.likes,
+                    downloads: sample.downloads,
+                    downloadsAllTime: sample.downloadsAllTime,
+                    keys: Object.keys(sample)
+                });
+            }
+            if (!state.models.length && !state.datasets.length && !state.spaces.length && !state.profile) {
+                showMsg(`No data found for <b>${escapeHtml(username)}</b>. Check the name or add a token.`, 'error');
+                els.emptyState.classList.remove('hidden');
+                return;
+            }
+            /* Fallback: if likes are all zero, fetch individually */
+            const modelsNeedLikes = state.models.length > 0 && state.models.every(m => getItemLikes(m) === 0);
+            const datasetsNeedLikes = state.datasets.length > 0 && state.datasets.every(d => getItemLikes(d) === 0);
+            if (modelsNeedLikes || datasetsNeedLikes) {
+                showMsg(`<span class="spinner"></span> Fetching detailed stats for <b>${escapeHtml(username)}</b>…`, 'loading');
+                if (modelsNeedLikes) {
+                    console.log('[HF-Stats] Likes missing from list API, fetching individually for models...');
+                    const batchSize = 10;
+                    for (let i = 0; i < state.models.length; i += batchSize) {
+                        const batch = state.models.slice(i, i + batchSize);
+                        const results = await Promise.allSettled(
+                            batch.map(m => fetchItemDetail(m.id || m.modelId, 'models'))
+                        );
+                        results.forEach((r, j) => {
+                            if (r.status === 'fulfilled' && r.value) {
+                                const d = r.value;
+                                state.models[i + j].likes = d.likes || 0;
+                                if (d.downloads != null) state.models[i + j].downloads = d.downloads;
+                                if (d.downloadsAllTime != null) state.models[i + j].downloadsAllTime = d.downloadsAllTime;
+                            }
+                        });
+                    }
+                }
+                if (datasetsNeedLikes) {
+                    console.log('[HF-Stats] Likes missing from list API, fetching individually for datasets...');
+                    const batchSize = 10;
+                    for (let i = 0; i < state.datasets.length; i += batchSize) {
+                        const batch = state.datasets.slice(i, i + batchSize);
+                        const results = await Promise.allSettled(
+                            batch.map(d => fetchItemDetail(d.id, 'datasets'))
+                        );
+                        results.forEach((r, j) => {
+                            if (r.status === 'fulfilled' && r.value) {
+                                const d = r.value;
+                                state.datasets[i + j].likes = d.likes || 0;
+                                if (d.downloads != null) state.datasets[i + j].downloads = d.downloads;
+                                if (d.downloadsAllTime != null) state.datasets[i + j].downloadsAllTime = d.downloadsAllTime;
+                            }
+                        });
+                    }
+                }
+            }
+            showMsg('', '');
+            window.location.hash = username;
+            document.title = `${username} — HF User Stats`;
+            renderProfile();
+            renderOverview();
+            setActiveTab('models');
+            els.resultsSection.classList.remove('hidden');
+        } catch (err) {
+            console.error(err);
+            showMsg(`Error: ${err.message}`, 'error');
+            els.emptyState.classList.remove('hidden');
+        } finally {
+            els.fetchBtn.disabled = false;
+        }
+    }
+    function renderProfile() {
+        const u = state.username;
+        const p = state.profile;
+        const avatarUrl = p?.avatarUrl;
+        if (avatarUrl) {
+            const full = avatarUrl.startsWith('http') ? avatarUrl : `https://huggingface.co${avatarUrl}`;
+            els.profileAvatar.innerHTML = `<img src="${full}" alt="${escapeHtml(u)}" onerror="this.parentElement.innerHTML='<span class=\\'avatar-letter\\'>${u[0].toUpperCase()}</span>'">`;
+        } else {
+            els.profileAvatar.innerHTML = `<span class="avatar-letter">${u[0].toUpperCase()}</span>`;
+        }
+        els.profileUsername.textContent = u;
+        els.profileLink.href = `https://huggingface.co/${u}`;
+        const fullname = p?.fullname || p?.name || '';
+        els.profileFullname.textContent = fullname;
+        els.profileFullname.style.display = fullname ? 'block' : 'none';
+    }
+    function renderOverview() {
+        els.totalModelsNum.textContent = state.models.length;
+        els.totalDatasetsNum.textContent = state.datasets.length;
+        els.totalSpacesNum.textContent = state.spaces.length;
+        els.tabModelCount.textContent = state.models.length;
+        els.tabDatasetCount.textContent = state.datasets.length;
+        els.tabSpaceCount.textContent = state.spaces.length;
+    }
+    function setActiveTab(tab) {
+        state.activeTab = tab;
+        state.activeFilter = (tab === 'spaces') ? 'likes' : 'downloads-alltime';
+        state.filterText = '';
+        els.tabBar.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.className = 'tab-btn';
+            if (btn.dataset.tab === tab) {
+                if (tab === 'models') btn.classList.add('active-model');
+                else if (tab === 'datasets') btn.classList.add('active-dataset');
+                else btn.classList.add('active-space');
+            }
+        });
+        [els.overviewModels, els.overviewDatasets, els.overviewSpaces].forEach(c => c.classList.remove('active-card'));
+        if (tab === 'models') els.overviewModels.classList.add('active-card');
+        else if (tab === 'datasets') els.overviewDatasets.classList.add('active-card');
+        else els.overviewSpaces.classList.add('active-card');
+        renderStats();
+        renderFilters();
+        renderTree();
+    }
+    function renderStats() {
+        const tab = state.activeTab;
+        const items = tab === 'models' ? state.models : tab === 'datasets' ? state.datasets : state.spaces;
+        const totalDlAllTime = items.reduce((s, i) => s + getLifetimeDownloads(i), 0);
+        const totalDlMonthly = items.reduce((s, i) => s + getMonthlyDownloads(i), 0);
+        const totalLk = items.reduce((s, i) => s + getItemLikes(i), 0);
+        const icon = tab === 'models' ? 'fa-cube' : tab === 'datasets' ? 'fa-database' : 'fa-rocket';
+        let html = `
+            <div class="stat-card">
+                <div class="stat-icon count-icon"><i class="fas ${icon}"></i></div>
+                <div>
+                    <div class="stat-value">${formatNum(items.length)}</div>
+                    <div class="stat-label">Total ${tab}</div>
+                </div>
+            </div>`;
+        if (tab !== 'spaces') {
+            html += `
+                <div class="stat-card">
+                    <div class="stat-icon dl-icon"><i class="fas fa-download"></i></div>
+                    <div>
+                        <div class="stat-value" title="${formatNumFull(totalDlAllTime)} all-time downloads">${formatNum(totalDlAllTime)}</div>
+                        <div class="stat-label">Downloads (All Time)</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon monthly-icon"><i class="fas fa-calendar-alt"></i></div>
+                    <div>
+                        <div class="stat-value" title="${formatNumFull(totalDlMonthly)} downloads last month">${formatNum(totalDlMonthly)}</div>
+                        <div class="stat-label">Downloads (Last Month)</div>
+                    </div>
+                </div>`;
+        }
+        html += `
+            <div class="stat-card">
+                <div class="stat-icon like-icon"><i class="fas fa-heart"></i></div>
+                <div>
+                    <div class="stat-value" title="${formatNumFull(totalLk)} total likes">${formatNum(totalLk)}</div>
+                    <div class="stat-label">Total Likes</div>
+                </div>
+            </div>`;
+        els.statsRow.innerHTML = html;
+    }
+    function renderFilters() {
+        const tab = state.activeTab;
+        let filters;
+        if (tab === 'models' || tab === 'datasets') {
+            filters = [
+                { key: 'downloads-alltime', label: 'Downloads (All Time)', icon: 'fa-download' },
+                { key: 'downloads-monthly', label: 'Downloads (Last Month)', icon: 'fa-calendar-alt' },
+                { key: 'likes', label: 'Most Liked', icon: 'fa-heart' },
+                { key: 'recent', label: 'Most Recent', icon: 'fa-clock' },
+            ];
+        } else {
+            filters = [
+                { key: 'likes', label: 'Most Liked', icon: 'fa-heart' },
+                { key: 'least-likes', label: 'Least Liked', icon: 'fa-heart-crack' },
+            ];
+        }
+        let html = '<span class="filter-label"><i class="fas fa-filter"></i> Sort:</span>';
+        for (const f of filters) {
+            html += `<button class="filter-pill ${state.activeFilter === f.key ? 'active' : ''}" data-filter="${f.key}">
+                <i class="fas ${f.icon}"></i> ${f.label}
+            </button>`;
+        }
+        html += `
+            <div class="filter-search">
+                <i class="fas fa-search"></i>
+                <input type="text" id="treeFilter" placeholder="Filter by name…" value="${escapeHtml(state.filterText)}">
+            </div>`;
+        els.filterBar.innerHTML = html;
+        els.filterBar.querySelectorAll('.filter-pill').forEach(btn => {
+            btn.addEventListener('click', () => {
+                state.activeFilter = btn.dataset.filter;
+                renderFilters();
+                renderTree();
+            });
+        });
+        const fi = $('treeFilter');
+        if (fi) fi.addEventListener('input', e => { state.filterText = e.target.value.trim().toLowerCase(); renderTree(); });
+    }
+    function getSortedItems() {
+        const tab = state.activeTab;
+        let items = [...(tab === 'models' ? state.models : tab === 'datasets' ? state.datasets : state.spaces)];
+        if (state.filterText) {
+            items = items.filter(i => (i.id || i.modelId || '').toLowerCase().includes(state.filterText));
+        }
+        items.sort((a, b) => {
+            switch (state.activeFilter) {
+                case 'downloads-alltime': return getLifetimeDownloads(b) - getLifetimeDownloads(a);
+                case 'downloads-monthly': return getMonthlyDownloads(b) - getMonthlyDownloads(a);
+                case 'likes': return getItemLikes(b) - getItemLikes(a);
+                case 'least-likes': return getItemLikes(a) - getItemLikes(b);
+                case 'recent': return new Date(b.lastModified || b.createdAt || 0) - new Date(a.lastModified || a.createdAt || 0);
+                default: return 0;
+            }
+        });
+        return items;
+    }
+    function getItemIcon(item, tab) {
+        if (tab === 'models') {
+            const p = item.pipeline_tag || '';
+            const m = {
+                'text-generation':'fa-solid fa-message','text2text-generation':'fa-solid fa-language',
+                'text-classification':'fa-solid fa-tags','token-classification':'fa-solid fa-font',
+                'question-answering':'fa-solid fa-circle-question','fill-mask':'fa-solid fa-mask',
+                'summarization':'fa-solid fa-compress','translation':'fa-solid fa-globe',
+                'conversational':'fa-solid fa-comments','image-classification':'fa-solid fa-image',
+                'object-detection':'fa-solid fa-vector-square','image-segmentation':'fa-solid fa-puzzle-piece',
+                'text-to-image':'fa-solid fa-wand-magic-sparkles','image-to-text':'fa-solid fa-file-lines',
+                'automatic-speech-recognition':'fa-solid fa-microphone','text-to-speech':'fa-solid fa-volume-high',
+                'audio-classification':'fa-solid fa-music','feature-extraction':'fa-solid fa-layer-group',
+                'sentence-similarity':'fa-solid fa-arrows-left-right','reinforcement-learning':'fa-solid fa-gamepad',
+                'image-to-image':'fa-solid fa-images','video-classification':'fa-solid fa-film',
+                'depth-estimation':'fa-solid fa-mountain','zero-shot-classification':'fa-solid fa-bullseye',
+            };
+            return m[p] || 'fa-solid fa-cube';
+        }
+        if (tab === 'datasets') return 'fa-solid fa-database';
+        return 'fa-solid fa-rocket';
+    }
+    function getItemName(item) {
+        const id = item.id || item.modelId || '';
+        const parts = id.split('/');
+        return parts.length > 1 ? parts.slice(1).join('/') : id;
+    }
+    function getItemUrl(item, tab) {
+        const id = item.id || item.modelId || '';
+        if (tab === 'datasets') return `https://huggingface.co/datasets/${id}`;
+        if (tab === 'spaces') return `https://huggingface.co/spaces/${id}`;
+        return `https://huggingface.co/${id}`;
+    }
+    function getItemColor(tab) {
+        if (tab === 'models') return 'var(--model-color)';
+        if (tab === 'datasets') return 'var(--dataset-color)';
+        return 'var(--space-color)';
+    }
+    function renderTree() {
+        const tab = state.activeTab;
+        const items = getSortedItems();
+        const tabLabel = tab.charAt(0).toUpperCase() + tab.slice(1);
+        els.treeTitle.textContent = `${state.username} / ${tabLabel} (${items.length})`;
+        els.lineNumbers.innerHTML = '';
+        els.treeContent.innerHTML = '';
+        if (items.length === 0) {
+            els.treeContent.innerHTML = `<div class="no-data"><i class="fas fa-inbox"></i>No ${tab} found.</div>`;
+            return;
+        }
+        const fragL = document.createDocumentFragment();
+        const fragT = document.createDocumentFragment();
+        const rL = document.createElement('div'); rL.textContent = '1'; fragL.appendChild(rL);
+        const rR = document.createElement('div');
+        rR.className = 'tree-line'; rR.style.fontWeight = '700';
+        const ri = tab === 'models' ? 'fa-cube' : tab === 'datasets' ? 'fa-database' : 'fa-rocket';
+        rR.innerHTML = `<span class="t-icon" style="color:${getItemColor(tab)};"><i class="fas ${ri}"></i></span><span class="t-name" style="color:${getItemColor(tab)};">${escapeHtml(state.username)} — ${items.length} ${tabLabel}</span>`;
+        fragT.appendChild(rR);
+        items.forEach((item, idx) => {
+            const lN = document.createElement('div'); lN.textContent = idx + 2; fragL.appendChild(lN);
+            const row = document.createElement('div');
+            row.className = 'tree-line';
+            row.style.animation = `fadeIn 0.12s forwards ${Math.min(idx * 6, 600)}ms`;
+            row.style.opacity = '0';
+            const isLast = idx === items.length - 1;
+            const conn = isLast ? '└── ' : '├── ';
+            const icon = getItemIcon(item, tab);
+            const name = getItemName(item);
+            const url = getItemUrl(item, tab);
+            const fullId = item.id || item.modelId || '';
+            let nameHtml = escapeHtml(name);
+            if (state.filterText && name.toLowerCase().includes(state.filterText)) {
+                const rx = new RegExp(`(${state.filterText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                nameHtml = name.replace(rx, '<mark style="background:var(--accent-light);color:var(--accent);padding:0 2px;border-radius:2px;">$1</mark>');
+            }
+            let meta = '';
+            if (tab !== 'spaces') {
+                const dlAll = getLifetimeDownloads(item);
+                const dlMonth = getMonthlyDownloads(item);
+                meta += `<span class="t-stat dl-stat" title="${formatNumFull(dlAll)} downloads (all time)"><i class="fas fa-download"></i> ${formatNum(dlAll)}</span>`;
+                meta += `<span class="t-stat monthly-stat" title="${formatNumFull(dlMonth)} downloads (last month)"><i class="fas fa-calendar-alt"></i> ${formatNum(dlMonth)}</span>`;
+            }
+            const likes = getItemLikes(item);
+            meta += `<span class="t-stat like-stat" title="${formatNumFull(likes)} likes"><i class="fas fa-heart"></i> ${formatNum(likes)}</span>`;
+            if (item.lastModified) {
+                meta += `<span class="t-stat date-stat" title="${new Date(item.lastModified).toLocaleDateString()}"><i class="far fa-clock"></i> ${relativeTime(item.lastModified)}</span>`;
+            }
+            row.innerHTML = `
+                <span class="t-prefix">${conn}</span>
+                <span class="t-icon" style="color:${getItemColor(tab)};"><i class="${icon}"></i></span>
+                <span class="t-name"><a href="${url}" target="_blank" rel="noopener" title="${escapeHtml(fullId)}">${nameHtml}</a></span>
+                <span class="t-meta">
+                    ${meta}
+                    <button class="t-copy" data-id="${escapeHtml(fullId)}" title="Copy ID"><i class="far fa-copy"></i></button>
+                </span>`;
+            fragT.appendChild(row);
+        });
+        els.lineNumbers.appendChild(fragL);
+        els.treeContent.appendChild(fragT);
+        els.treeContent.onclick = function(e) {
+            const btn = e.target.closest('.t-copy');
+            if (!btn) return;
+            navigator.clipboard.writeText(btn.dataset.id).then(() => {
+                const ic = btn.querySelector('i');
+                const orig = ic.className;
+                ic.className = 'fas fa-check'; ic.style.color = '#22c55e';
+                setTimeout(() => { ic.className = orig; ic.style.color = ''; }, 1500);
+            });
+        };
+    }
+    function copyFullTree() {
+        const tab = state.activeTab;
+        const items = getSortedItems();
+        const tabLabel = tab.charAt(0).toUpperCase() + tab.slice(1);
+        const lines = [`${state.username} — ${items.length} ${tabLabel}`];
+        items.forEach((item, idx) => {
+            const conn = idx === items.length - 1 ? '└── ' : '├── ';
+            const name = getItemName(item);
+            let meta = '';
+            if (tab !== 'spaces') {
+                meta += ` ↓${formatNum(getLifetimeDownloads(item))} all`;
+                meta += ` ↓${formatNum(getMonthlyDownloads(item))} /mo`;
+            }
+            meta += ` ♥${formatNum(getItemLikes(item))}`;
+            lines.push(`${conn}${name} (${meta.trim()})`);
+        });
+        const totalDlAll = items.reduce((s, i) => s + getLifetimeDownloads(i), 0);
+        const totalDlMonth = items.reduce((s, i) => s + getMonthlyDownloads(i), 0);
+        const totalLk = items.reduce((s, i) => s + getItemLikes(i), 0);
+        lines.push('');
+        if (tab !== 'spaces') {
+            lines.push(`Total Downloads (All Time): ${formatNumFull(totalDlAll)}`);
+            lines.push(`Total Downloads (Last Month): ${formatNumFull(totalDlMonth)}`);
+        }
+        lines.push(`Total Likes: ${formatNumFull(totalLk)}`);
+        navigator.clipboard.writeText(lines.join('\n')).then(() => {
+            const orig = els.copyTreeBtn.innerHTML;
+            els.copyTreeBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => { els.copyTreeBtn.innerHTML = orig; }, 1800);
+        });
+    }
+    function buildHomepage() {
+        const c = $('featuredUsers');
+        FEATURED_USERS.forEach(u => {
+            const btn = document.createElement('button');
+            btn.className = 'user-tag';
+            btn.innerHTML = `<i class="fas fa-user"></i> ${u}`;
+            btn.addEventListener('click', () => { els.usernameInput.value = u; fetchUserStats(); });
+            c.appendChild(btn);
+        });
+    }
+    function parseHash() {
+        const h = window.location.hash;
+        if (h && h.length > 1) {
+            const u = decodeURIComponent(h.substring(1));
+            if (u) { els.usernameInput.value = u; fetchUserStats(); }
+        }
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        initTheme();
+        checkToken();
+        buildHomepage();
+        els.privateRepoBtn.addEventListener('click', () => els.tokenSection.classList.toggle('hidden'));
+        els.saveTokenBtn.addEventListener('click', () => {
+            const t = els.hfToken.value.trim();
+            if (!t) return;
+            localStorage.setItem('hf_token', t);
+            checkToken();
+            showMsg('Token saved.', 'loading');
+            setTimeout(() => showMsg('', ''), 1500);
+        });
+        els.clearTokenBtn.addEventListener('click', () => {
+            localStorage.removeItem('hf_token');
+            els.hfToken.value = '';
+            checkToken();
+            showMsg('Token cleared.', 'loading');
+            setTimeout(() => showMsg('', ''), 1500);
+        });
+        els.hfToken.addEventListener('keypress', e => { if (e.key === 'Enter') els.saveTokenBtn.click(); });
+        els.fetchBtn.addEventListener('click', fetchUserStats);
+        els.usernameInput.addEventListener('keypress', e => { if (e.key === 'Enter') fetchUserStats(); });
+        els.tabBar.querySelectorAll('.tab-btn').forEach(btn =>
+            btn.addEventListener('click', () => setActiveTab(btn.dataset.tab))
+        );
+        [els.overviewModels, els.overviewDatasets, els.overviewSpaces].forEach(card =>
+            card.addEventListener('click', () => setActiveTab(card.dataset.tab))
+        );
+        els.copyTreeBtn.addEventListener('click', copyFullTree);
+        parseHash();
+    });
+    </script>
+</body>
+</html>
